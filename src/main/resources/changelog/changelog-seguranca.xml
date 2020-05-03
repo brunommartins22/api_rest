@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    
+    <include file="/changelog/changelog-estado-cidade.xml"/>
+    
+    <changeSet id="create initial user and alter sequence" author="bruno_martins" runOnChange="true">
+
+        <preConditions onFail="MARK_RAN">            
+
+            <sqlCheck  expectedResult="0">
+
+                select count(*) from seguranca.usuario u where u.id = 1;
+ 
+            </sqlCheck>            
+
+        </preConditions>
+
+        <sql splitStatements="true" dbms="postgresql">          
+
+            INSERT INTO 
+            seguranca.usuario
+            (id, rgdata, rgevento, rgcodusu, rgusuario, login, nome, senha, tempo_sessao, tipo_layout, tipo_menu)
+            VALUES (1, now(), 1, 1, 'ADMIN', 'ADMIN', 'Administrador', '6abe9ed939f7857d4aed0d14d81c0752', null,null,NULL);
+            
+            ALTER SEQUENCE seguranca.seq_usuario INCREMENT 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 1 RESTART 2 CACHE 1 NO CYCLE;
+
+        </sql>
+  
+    </changeSet>
+    
+        
+    <changeSet id="create domain dominio_grupo_sistema" author="bruno_martins"   runOnChange="true">
+
+        <preConditions onFail="MARK_RAN">            
+
+            <sqlCheck expectedResult="0">
+                SELECT count(*) FROM pg_catalog.pg_type WHERE typname = 'DominioGrupoSistema';
+            </sqlCheck>            
+
+        </preConditions>
+
+        <sql splitStatements="true" dbms="postgresql">
+
+            CREATE DOMAIN seguranca."DominioGrupoSistema"
+            AS character varying(30)
+            CONSTRAINT "DominioGrupoSistema" CHECK (value in ('EFINANCAS'));
+            ALTER DOMAIN seguranca."DominioGrupoSistema"
+            OWNER TO bmm;
+
+        </sql>
+
+    </changeSet>
+    
+    <changeSet id="alter type column dominio_grupo_sistema on table sistema" author="bruno_martins" runOnChange="true">
+
+        <sql splitStatements="true" dbms="postgresql">
+
+            ALTER TABLE seguranca.sistema
+            ALTER COLUMN dominio_grupo_sistema TYPE seguranca."DominioGrupoSistema";
+
+        </sql>
+
+    </changeSet>  
+        
+    <changeSet id="create domain dominio_tipo_pessoa" author="bruno_martins"   runOnChange="true">
+
+        <preConditions onFail="MARK_RAN">            
+
+            <sqlCheck expectedResult="0">
+
+                SELECT count(*) FROM pg_catalog.pg_type WHERE typname = 'DominioTipoPessoa';
+
+            </sqlCheck>            
+
+        </preConditions>
+
+        <sql splitStatements="true" dbms="postgresql">
+
+            CREATE DOMAIN seguranca."DominioTipoPessoa"
+            AS character varying(11)
+            CONSTRAINT "DominioTipoPessoa" CHECK (value in ('FISICA','JURIDICA','PUBLICA','ESTRANGEIRA'));
+            ALTER DOMAIN seguranca."DominioTipoPessoa"
+            OWNER TO bmm;
+
+        </sql>
+
+    </changeSet>
+    
+    <changeSet id="alter type column tipo_pessoa on table empresa" author="bruno_martins" runOnChange="true">
+
+        <sql splitStatements="true" dbms="postgresql">
+
+            ALTER TABLE seguranca.empresa
+            ALTER COLUMN tipo_pessoa TYPE seguranca."DominioTipoPessoa";
+
+        </sql>
+ 
+    </changeSet>    
+    
+    
+    <changeSet id="create domain dominio_tipo_menu" author="bruno_martins" runOnChange="true">
+
+        <preConditions onFail="MARK_RAN">            
+
+            <sqlCheck expectedResult="0">
+
+                SELECT count(*) FROM pg_catalog.pg_type WHERE typname = 'DominioTipoMenu';
+
+            </sqlCheck>            
+
+        </preConditions>
+
+        <sql splitStatements="true" dbms="postgresql">            
+
+            CREATE DOMAIN seguranca."DominioTipoMenu" 
+            AS varchar(6) 
+            CONSTRAINT "DominioTipoMenu" CHECK (value IN('CLARO','ESCURO'));
+            ALTER DOMAIN seguranca."DominioTipoMenu"
+            OWNER TO bmm;
+
+        </sql>
+   
+    </changeSet>
+    
+    
+    <changeSet id="alter type column tipo_menu on table usuario" author="bruno_martins" runOnChange="true">
+      
+        <sql splitStatements="true" dbms="postgresql">                           
+
+            ALTER TABLE seguranca.usuario
+            ALTER COLUMN tipo_menu TYPE seguranca."DominioTipoMenu" COLLATE pg_catalog."default";
+
+        </sql>
+
+    </changeSet>
+    
+        
+    <changeSet id="create domain dominio_tipo_layout" author="bruno_martins" runOnChange="true">
+
+        <preConditions onFail="MARK_RAN">            
+
+            <sqlCheck expectedResult="0">
+
+                SELECT count(*) FROM pg_catalog.pg_type WHERE typname = 'DominioTipoLayout';
+
+            </sqlCheck>            
+
+        </preConditions>
+
+        <sql splitStatements="true" dbms="postgresql">              
+              
+            CREATE DOMAIN seguranca."DominioTipoLayout" 
+            AS varchar(15) 
+            CONSTRAINT "DominioTipoLayout_chk" CHECK (value in ('FLEXIVEL','ESTATICO','SOBREPOSTO','HORIZONTAL','ALTERNADO'));
+            ALTER DOMAIN seguranca."DominioTipoMenu"
+            OWNER TO bmm;
+            
+        </sql>
+  
+    </changeSet>
+    
+    
+    <changeSet id="alter type column tipo_layout on table usuario" author="bruno_martins" runOnChange="true">
+        
+        <sql splitStatements="true" dbms="postgresql">              
+
+            ALTER TABLE seguranca.usuario
+            ALTER COLUMN tipo_layout TYPE seguranca."DominioTipoLayout" COLLATE pg_catalog."default";
+      
+        </sql>
+        
+    </changeSet>
+    
+    
+     <changeSet id="create domain dominio_ativo" author="bruno_martins" runOnChange="true">
+
+        <preConditions onFail="MARK_RAN">            
+
+            <sqlCheck expectedResult="0">
+
+                SELECT count(*) FROM pg_catalog.pg_type WHERE typname = 'DominioAtivo';
+
+            </sqlCheck>            
+
+        </preConditions>
+
+        <sql splitStatements="true" dbms="postgresql">              
+              
+            CREATE DOMAIN seguranca."DominioAtivo" 
+            AS character(1) 
+            CONSTRAINT "DominioAtivo" CHECK (value in ('S','N'));
+            ALTER DOMAIN seguranca."DominioAtivo"
+            OWNER TO bmm;
+            
+        </sql>
+  
+    </changeSet>
+    
+    
+    <changeSet id="insert permissions of system" author="bruno_martins"   runOnChange="true">
+        
+        <preConditions onFail="MARK_RAN">
+        
+            <sqlCheck expectedResult="0">
+                
+                select count(*) from seguranca.permissao where id = '1';
+            
+            </sqlCheck>
+
+        </preConditions>
+
+        <sql splitStatements="true" dbms="postgresql">
+
+            INSERT INTO seguranca.permissao VALUES ('1', 'Cadastro', null);
+            INSERT INTO seguranca.permissao VALUES ('1.01', 'Cadastro de Usuário', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.01.01', '     Incluir', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.01.02', '     Alterar', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.01.03', '     Excluir', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.01.04', '     Conceder Permissão', 'PROCESSO');
+            INSERT INTO seguranca.permissao VALUES ('1.02', 'Cadastro de Empresa', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.02.01', '     Incluir', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.02.02', '     Alterar', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.02.03', '     Excluir', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.03', 'Cadastro de Cliente', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.03.01', '     Incluir', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.03.02', '     Alterar', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('1.03.03', '     Excluir', 'CADASTRO');
+            INSERT INTO seguranca.permissao VALUES ('2', 'Processos', null);
+         
+        </sql>
+        
+    </changeSet>
+       
+</databaseChangeLog>
