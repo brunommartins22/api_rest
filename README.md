@@ -1,3 +1,3 @@
 # api_rest
-Pattern API_REST with spring-boot + spring-security + Java
+Pattern API_REST with Spring Boot + Spring Security + Java
 
